@@ -15,7 +15,7 @@
     <script>
     // Система пользователей
     let currentUser = null;
-    let users = JSON.parse(localStorage.getItem("osint_users")) || [];
+    let userIdCounter = parseInt(localStorage.getItem("user_id_counter")) || 1;
     let userIdCounter = parseInt(localStorage.getItem("user_id_counter")) || 1;
 
     // Автоматически создаем аккаунт создателя при первом запуске
