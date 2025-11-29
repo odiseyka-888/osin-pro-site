@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Активация доступа</title>
+    <style>
+        body { background: black; color: lime; font-family: Arial; padding: 20px; }
+        input, button { padding: 15px; margin: 10px; font-size: 18px; }
+        input { width: 300px; background: #111; color: lime; border: 1px solid lime; }
+        button { background: orange; color: black; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>🔓 Активация доступа OSINT Pro</h2>
+    <p>После оплаты введите ваш username для активации:</p>
+    
+    <input type="text" id="username" placeholder="Ваш username">
+    <br>
+    <button onclick="activateAccess()">АКТИВИРОВАТЬ ДОСТУП</button>
+    
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        function activateAccess() {
+            const username = document.getElementById('username').value;
+            const result = document.getElementById('result');
+            
+            if (!username) {
+                result.innerHTML = '<p style="color: red;">Введите username</p>';
+                return;
+            }
+
+            // Проверяем есть ли пользователь
+            const users = JSON.parse(localStorage.getItem('osint_users') || '[]');
+            const user = users.find(u => u.username === username);
+            
+            if (!user) {
+                result.innerHTML = '<p style="color: red;">Пользователь не найден. Зарегистрируйтесь сначала на основном сайте.</p>';
+                return;
+            }
+
+            // Активируем доступ
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + 30); // 30 дней по умолчанию
+            
+            user.subscription = {
+                active: true,
+                type: 'PAID',
+                expiryDate: expiry.toISOString().split('T')[0],
+                requestsUsed: 0,
+                totalRequests: 100
+            };
+
+            localStorage.setItem('osint_users', JSON.stringify(users));
+            
+            result.innerHTML = `
+                <p style="color: lime;">✅ ДОСТУП АКТИВИРОВАН!</p>
+                <p>Username: <strong>${username}</strong></p>
+                <p>Срок: <strong>30 дней</strong></p>
+                <p>Запросов в день: <strong>100</strong></p>
+                <p>Теперь войдите на основной сайт!</p>
+            `;
+        }
+    </script>
+</body>
+</html>

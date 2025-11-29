@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Выдача доступа</title>
+    <style>
+        body { background: black; color: white; padding: 20px; }
+        button { padding: 15px; margin: 10px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h2>Выдать доступ пользователю</h2>
+    
+    <input type="text" id="user" placeholder="Имя пользователя" style="padding: 10px; width: 200px;">
+    <br>
+    
+    <button onclick="giveAccess(1)">Неделя (3 TON)</button><br>
+    <button onclick="giveAccess(2)">Месяц (7 TON)</button><br>
+    <button onclick="giveAccess(3)">Год (14 TON)</button><br>
+    <button onclick="giveAccess(4)">Навсегда (27 TON)</button>
+
+    <script>
+        function giveAccess(planType) {
+            const username = document.getElementById('user').value;
+            if (!username) {
+                alert('Введите имя пользователя');
+                return;
+            }
+
+            // Получаем данные из основного сайта
+            const users = JSON.parse(localStorage.getItem('osint_users') || '[]');
+            const user = users.find(u => u.username === username);
+            
+            if (!user) {
+                alert('Пользователь не найден');
+                return;
+            }
+
+            const plans = [
+                [7, 50, 'WEEKLY'],
+                [30, 100, 'MONTHLY'], 
+                [365, 200, 'YEARLY'],
+                [9999, 999999, 'LIFETIME']
+            ];
+
+            const plan = plans[planType - 1];
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + plan[0]);
+
+            user.subscription = {
+                active: true,
+                type: plan[2],
+                expiryDate: expiry.toISOString().split('T')[0],
+                requestsUsed: 0,
+                totalRequests: plan[1]
+            };
+
+            localStorage.setItem('osint_users', JSON.stringify(users));
+            alert('УСПЕХ: ' + username + ' получил доступ!');
+        }
+    </script>
+</body>
+</html>

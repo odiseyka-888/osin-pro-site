@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Админ панель OSINT</title>
+    <style>
+        body { 
+            background: black; 
+            color: limegreen; 
+            font-family: Arial; 
+            padding: 20px; 
+        }
+        .panel { 
+            background: #222; 
+            padding: 20px; 
+            margin: 10px; 
+            border: 2px solid limegreen; 
+            border-radius: 10px;
+        }
+        input, select { 
+            padding: 12px; 
+            margin: 8px 0; 
+            background: #111; 
+            color: limegreen; 
+            border: 1px solid limegreen; 
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+        }
+        button { 
+            padding: 12px; 
+            margin: 8px 0;
+            background: orange; 
+            color: black; 
+            font-weight: bold; 
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .user-list {
+            background: #111;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        h1, h3 {
+            color: orange;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>АДМИН ПАНЕЛЬ OSINT PRO</h1>
+    
+    <div class="panel">
+        <h3>Выдать доступ пользователю</h3>
+        <input type="text" id="username" placeholder="Введите имя пользователя">
+        <select id="plan">
+            <option value="WEEKLY">Неделя - 3 TON</option>
+            <option value="MONTHLY">Месяц - 7 TON</option>
+            <option value="YEARLY">Год - 14 TON</option>
+            <option value="LIFETIME">Навсегда - 27 TON</option>
+        </select>
+        <button onclick="giveAccess()">ВЫДАТЬ ДОСТУП</button>
+    </div>
+
+    <div class="panel">
+        <h3>Управление пользователями</h3>
+        <button onclick="showUsers()">ПОКАЗАТЬ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ</button>
+        <button onclick="checkUser()">ПРОВЕРИТЬ ПОЛЬЗОВАТЕЛЯ</button>
+        <div id="usersList" class="user-list"></div>
+    </div>
+
+    <script>
+        function giveAccess() {
+            const username = document.getElementById('username').value;
+            const plan = document.getElementById('plan').value;
+            
+            if (!username) {
+                alert('Введите имя пользователя');
+                return;
+            }
+            
+            // Получаем пользователей из основного сайта
+            const users = JSON.parse(localStorage.getItem('osint_users') || '[]');
+            const user = users.find(u => u.username === username);
+            
+            if (!user) {
+                alert('Пользователь не найден');
+                return;
+            }
+            
+            const plans = {
+                'WEEKLY': { days: 7, requests: 50 },
+                'MONTHLY': { days: 30, requests: 100 },
+                'YEARLY': { days: 365, requests: 200 },
+                'LIFETIME': { days: 9999, requests: 999999 }
+            };
+            
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + plans[plan].days);
+            
+            user.subscription = {
+                active: true,
+                type: plan,
+                expiryDate: expiry.toISOString().split('T')[0],
+                requestsUsed: 0,
+                totalRequests: plans[plan].requests
+            };
+            
+            localStorage.setItem('osint_users', JSON.stringify(users));
+            alert('УСПЕХ: ' + username + ' получил доступ на ' + plan);
+        }
+
+        function showUsers() {
+            const users = JSON.parse(localStorage.getItem('osint_users') || '[]');
+            const list = document.getElementById('usersList');
+            
+            let html = '<h4>Список пользователей:</h4>';
+            
+            if (users.length === 0) {
+                html += '<p>Пользователей нет</p>';
+            } else {
+                users.forEach(user => {
+                    const status = user.subscription && user.subscription.active ? 
+                        'АКТИВНА: ' + user.subscription.type + ' (до ' + user.subscription.expiryDate + ')' : 
+                        'НЕТ ПОДПИСКИ';
+                    html += '<div style="border-bottom: 1px solid #333; padding: 10px 0;">';
+                    html += '<strong>Имя:</strong> ' + user.username + '<br>';
+                    html += '<strong>Email:</strong> ' + user.email + '<br>';
+                    html += '<strong>Статус:</strong> ' + status;
+                    html += '</div>';
+                });
+            }
+            
+            list.innerHTML = html;
+        }
+
+        function checkUser() {
+            const username = document.getElementById('username').value;
+            
+            if (!username) {
+                alert('Введите имя пользователя для проверки');
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('osint_users') || '[]');
+            const user = users.find(u => u.username === username);
+            
+            if (!user) {
+                alert('Пользователь не найден');
+                return;
+            }
+            
+            const sub = user.subscription;
+            let info = 'ИНФОРМАЦИЯ О ' + username + ':\n\n';
+            info += 'Email: ' + user.email + '\n';
+            info += 'Дата регистрации: ' + user.registrationDate + '\n\n';
+            
+            if (sub && sub.active) {
+                info += 'ПОДПИСКА АКТИВНА\n';
+                info += 'Тариф: ' + sub.type + '\n';
+                info += 'Действует до: ' + sub.expiryDate + '\n';
+                info += 'Запросы: ' + sub.requestsUsed + ' / ' + sub.totalRequests;
+            } else {
+                info += 'ПОДПИСКА НЕ АКТИВНА';
+            }
+            
+            alert(info);
+        }
+    </script>
+</body>
+</html>
