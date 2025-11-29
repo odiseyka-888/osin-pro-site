@@ -1,127 +1,56 @@
-<script>
-// Система пользователей
-let currentUser = null;
-let users = JSON.parse(localStorage.getItem('osint_users')) || [];
-let userIdCounter = parseInt(localStorage.getItem('user_id_counter')) || 1;
-
-// Автоматически создаем аккаунт создателя при первом запуске
-function initializeCreatorAccount() {
-    const creatorExists = users.find(u => u.username === 'Odiseyka');
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSIN-PRO</title>
+</head>
+<body>
+    <h1>Добро пожаловать в OSIN-PRO</h1>
+    <p>Система управления пользователями</p>
     
-    if (!creatorExists) {
-        const creatorAccount = {
-            id: 0, // специальный ID для создателя
-            username: 'Odiseyka',
-            email: 'vsemogishchi3zeus@gmail.com',
-            password: 'qwerzxc987',
-            registrationDate: new Date().toLocaleDateString('ru-RU'),
-            role: 'CREATOR', // особая роль
-            subscription: {
-                active: true,
-                type: 'CREATOR_LIFETIME',
-                expiryDate: '9999-12-31', // вечный доступ
-                requestsUsed: 0,
-                totalRequests: 999999 // неограниченно
-            }
-        };
-        
-        users.push(creatorAccount);
-        localStorage.setItem('osint_users', JSON.stringify(users));
-        console.log('[SYSTEM] Creator account created automatically');
-    }
-}
+    <div id="authSection">
+        <button onclick="showLogin()">Вход</button>
+        <button onclick="showRegister()">Регистрация</button>
+    </div>
 
-// Проверяем авторизацию при загрузке
-window.onload = function() {
-    initializeCreatorAccount(); // создаем аккаунт создателя
-    
-    const savedUser = localStorage.getItem('current_user');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        updateUI();
-    }
-};
+    <script>
+    // Система пользователей
+    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem("osint_users")) || [];
+    let userIdCounter = parseInt(localStorage.getItem("user_id_counter")) || 1;
 
-function login() {
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('current_user', JSON.stringify(user));
-        updateUI();
-        closeModal('loginModal');
-        
-        if (user.role === 'CREATOR') {
-            alert(`[CREATOR MODE] Добро пожаловать, создатель ${user.username}! 🚀`);
-        } else {
-            alert(`[SUCCESS] Добро пожаловать, ${user.username}!`);
+    // Автоматически создаем аккаунт создателя при первом запуске
+    function initializeCreatorAccount() {
+        const creatorExists = users.find(u => u.username === 'Odiseyka');
+        if (!creatorExists) {
+            const creatorAccount = {
+                id: 0,
+                username: 'Odiseyka',
+                email: 'vseengsischulizeus@gmail.com',
+                password: 'qwertxc987',
+                registrationDate: new Date().toLocaleDateString('ru-RU'),
+                role: 'CREATOR',
+                subscription: {
+                    active: true,
+                    type: 'CREATOR_LIFETIME',
+                    expiryDate: '9999-12-31'
+                }
+            };
+            users.push(creatorAccount);
+            localStorage.setItem("osint_users", JSON.stringify(users));
         }
-    } else {
-        alert('[ERROR] Неверное имя пользователя или пароль');
     }
-}
 
-function updateProfileInfo() {
-    if (!currentUser) return;
-
-    document.getElementById('usernameDisplay').textContent = currentUser.username;
-    document.getElementById('emailDisplay').textContent = currentUser.email;
-    document.getElementById('userIdDisplay').textContent = currentUser.id.toString().padStart(6, '0');
-    document.getElementById('avatarLetter').textContent = currentUser.username.charAt(0).toUpperCase();
-    document.getElementById('regDate').textContent = currentUser.registrationDate;
-    document.getElementById('usedRequests').textContent = currentUser.subscription.requestsUsed;
-    document.getElementById('totalRequests').textContent = currentUser.subscription.totalRequests;
-
-    // Обновляем информацию о подписке
-    const subscription = currentUser.subscription;
-    const statusElement = document.getElementById('subscriptionStatus');
-    const expiryElement = document.getElementById('expiryDate');
-    const daysLeftElement = document.getElementById('daysLeft');
-    const tariffElement = document.getElementById('tariffName');
-    const accountStatusElement = document.getElementById('accountStatus');
-
-    if (currentUser.role === 'CREATOR') {
-        statusElement.textContent = '[CREATOR_ACCESS]';
-        statusElement.className = 'subscription-status subscription-active';
-        statusElement.style.color = '#ff9900'; // особый цвет для создателя
-        expiryElement.textContent = 'ВЕЧНЫЙ ДОСТУП';
-        daysLeftElement.textContent = 'Осталось дней: ∞';
-        tariffElement.textContent = 'CREATOR LIFETIME';
-        tariffElement.style.color = '#ff9900';
-        accountStatusElement.textContent = 'CREATOR';
-        accountStatusElement.style.color = '#ff9900';
-        daysLeftElement.style.color = '#ff9900';
+    // Функции для интерфейса
+    function showLogin() {
+        alert('Форма входа будет здесь');
     }
-    else if (subscription.active && subscription.expiryDate) {
-        const expiryDate = new Date(subscription.expiryDate);
-        const today = new Date();
-        const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
-        statusElement.textContent = '[SUBSCRIPTION_ACTIVE]';
-        statusElement.className = 'subscription-status subscription-active';
-        expiryElement.textContent = subscription.expiryDate;
-        daysLeftElement.textContent = `Осталось дней: ${daysLeft}`;
-        tariffElement.textContent = subscription.type;
-        accountStatusElement.textContent = 'Active';
-
-        if (daysLeft <= 3) {
-            daysLeftElement.style.color = '#e74c3c';
-        } else if (daysLeft <= 7) {
-            daysLeftElement.style.color = '#f39c12';
-        } else {
-            daysLeftElement.style.color = '#27ae60';
-        }
-    } else {
-        statusElement.textContent = '[SUBSCRIPTION_EXPIRED]';
-        statusElement.className = 'subscription-status subscription-expired';
-        expiryElement.textContent = '--.--.----';
-        daysLeftElement.textContent = 'Осталось дней: 0';
-        tariffElement.textContent = 'Не активен';
-        accountStatusElement.textContent = 'Inactive';
-        daysLeftElement.style.color = '#e74c3c';
+    function showRegister() {
+        window.location.href = 'akrusauwa.html';
     }
-}
-</script>
+
+    // Инициализация при загрузке страницы
+    initializeCreatorAccount();
+    </script>
+</body>
+</html>
